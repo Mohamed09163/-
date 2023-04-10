@@ -1,23 +1,190 @@
-# Compiled class file
-*.class
+import android.os.Bundle
+import android.view.Gravity
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 
-# Log file
-*.log
+class MainActivity : AppCompatActivity() {
 
-# BlueJ files
-*.ctxt
+    private var currentQuestionIndex = 0
+    private var currentMoneyAmount = 0
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+    private val questions = listOf(
+        Question("What is the capital of France?", listOf("London", "Paris", "Rome", "Berlin"), 1),
+        Question("Who painted the Mona Lisa?", listOf("Van Gogh", "Rembrandt", "Da Vinci", "Picasso"), 2),
+        Question("What is the smallest country in the world?", listOf("Vatican City", "Monaco", "San Marino", "Nauru"), 0),
+        Question("What is the largest mammal in the world?", listOf("Elephant", "Blue Whale", "Giraffe", "Hippopotamus"), 1),
+        Question("Who wrote the novel '1984'?", listOf("Ernest Hemingway", "George Orwell", "F. Scott Fitzgerald", "William Shakespeare"), 1)
+    )
 
-# Package Files #
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
+    private val questionTextView: TextView by lazy {
+        TextView(this).apply {
+            text = questions[currentQuestionIndex].questionText
+            textSize = 24f
+            gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = 32
+            }
+        }
+    }
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
+    private val answerButtons: List<Button> by lazy {
+        questions[currentQuestionIndex].possibleAnswers.map { answerText ->
+            Button(this).apply {
+                text = answerText
+                textSize = 18f
+                setOnClickListener { checkAnswer(answerText) }
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = 16
+                }
+            }
+        }
+    }
+
+    private val moneyAmountTextView: TextView by lazy {
+        TextView(this).apply {
+            text = "$$currentMoneyAmount"
+            textSize = 32f
+            gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            ).apply {
+                setMargins(64, 64, 64, 64)
+            }
+        }
+
+        layout.addView(moneyAmountTextView)
+        layout.addView(questionTextView)
+        answerButtons.forEach { layout.addView(it) }
+
+        setContentView(layout)
+    }
+
+    private fun checkAnswer(answer: String) {
+        val correctAnswer = questions[currentQuestionIndex].possibleAnswers[questions[currentQuestionIndex].correctAnswerIndex]
+        if (answer == correctAnswer) {
+            currentMoneyAmount += 5000
+        } else {
+            // end the game
+        }
+        currentQuestionIndex++
+        if (currentQuestionIndex >= questions.size) {
+            // end the game
+        } else {
+            questionTextView.text = questions[currentQuestionIndex].questionText
+            questions[currentQuestionIndex].possibleAnswers.forEachIndexed
+
+class MainActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding
+    
+    private var currentScore = 0
+    private var currentQuestionIndex = 0
+    private lateinit var currentQuestion: Question
+    private var quizQuestions = listOf(
+        Question(R.string.question1, false),
+        Question(R.string.question2, true),
+        Question(R.string.question3, true),
+        Question(R.string.question4, false),
+        Question(R.string.question5, false),
+        Question(R.string.question6, true),
+        Question(R.string.question7, true),
+        Question(R.string.question8, false),
+        Question(R.string.question9, true),
+        Question(R.string.question10, false)
+    )
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        currentQuestion = quizQuestions[currentQuestionIndex]
+
+        // Set up the text for the first question
+        binding.questionText.text = currentQuestion.questionText
+
+        // Set up click listeners for the true/false buttons
+        binding.trueButton.setOnClickListener {
+            checkAnswer(true)
+        }
+        binding.falseButton.setOnClickListener {
+            checkAnswer(false)
+        }
+
+        // Set up click listener for the "next" button
+        binding.nextButton.setOnClickListener {
+            goToNextQuestion()
+        }
+
+        // Set up click listener for the "reset" button
+        binding.resetButton.setOnClickListener {
+            resetQuiz()
+        }
+    }
+
+    private fun checkAnswer(userAnswer: Boolean) {
+        if (userAnswer == currentQuestion.answer) {
+            Toast.makeText(this, "Correct!", Toast.LENGTH_SHORT).show()
+            currentScore++
+        } else {
+            Toast.makeText(this, "Wrong!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun goToNextQuestion() {
+        currentQuestionIndex++
+        if (currentQuestionIndex >= quizQuestions.size) {
+            // The quiz is over, show the final score
+            val finalScoreMessage = "You scored $currentScore out of ${quizQuestions.size}!"
+            Toast.makeText(this, finalScoreMessage, Toast.LENGTH_LONG).show()
+            disableAnswerButtons()
+            binding.nextButton.isEnabled = false
+        } else {
+            // Go to the next question
+            currentQuestion = quizQuestions[currentQuestionIndex]
+            binding.questionText.text = currentQuestion.questionText
+        }
+    }
+
+    private fun resetQuiz() {
+        currentScore = 0
+        currentQuestionIndex = 0
+        currentQuestion = quizQuestions[currentQuestionIndex]
+        binding.questionText.text = currentQuestion.questionText
+        enableAnswerButtons()
+        binding.nextButton.isEnabled = true
+    }
+
+    private fun disableAnswerButtons() {
+        binding.trueButton.isEnabled = false
+        binding.falseButton.isEnabled = false
+    }
+
+    private fun enableAnswerButtons() {
+        binding.trueButton.isEnabled = true
+        binding.falseButton.isEnabled = true
+    }
+}
+
